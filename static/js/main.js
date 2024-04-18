@@ -48,3 +48,14 @@ for (let i = 0; tags.length > i; i++) {
 
     })
 }
+//Delete Button Javascript
+    document.getElementById("deleteForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // Prevent the form from submitting
+        // Handle form submission here, e.g., show confirmation dialog
+    });
+
+    document.getElementById("backButton").addEventListener("click", function(event) {
+        event.preventDefault(); // Prevent the default action of the link (going back)
+        // Handle going back here, e.g., redirect to the desired page
+        window.location.href = "{% url 'profiles' %}";
+    });

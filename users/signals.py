@@ -19,16 +19,14 @@ def createProfile(sender, instance, created, **kwargs):
             email=user.email,
             name=user.first_name,
         )
-
-        subject = 'Welcome to DevSearch'
-        message = 'We are glad you are here!'
-
+        subject = 'Welcome to Dev Search'
+        message = 'We are glad that you are here'
         send_mail(
             subject,
             message,
             settings.EMAIL_HOST_USER,
             [profile.email],
-            fail_silently=False,
+            fail_silently=False
         )
 
 
