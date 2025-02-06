@@ -1,0 +1,30 @@
+# Virtual environment
+myenv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django-specific
+# db.sqlite3
+*.log
+*.pot
+
+# Static and media files
+static/
+media/
+
+# Secrets and config files
+.myenv
+.myenv.*
+secrets/
+
+# IDE/Editor
+.vscode/
+.idea/
+*.iml
+
