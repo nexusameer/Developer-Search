@@ -1,49 +1,66 @@
 trigger:
-  - main
+- main  # Trigger the pipeline when changes happen on the main branch
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-latest
 
 steps:
-  # Step 1: Checkout code
-  - task: Checkout@1
-    inputs:
-      clean: true
+# Step 1: Checkout code
+- task: Checkout@1
+  inputs:
+    clean: true
 
-  # Step 2: Login to Docker Hub using script
-  - script: |
-      echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin
-    displayName: 'Login to Docker Hub'
-    env:
-      DOCKER_USERNAME: $(dockerUsername)
-      DOCKER_PASSWORD: $(dockerPassword)
+# Step 2: Login to Docker Hub (you must have configured Docker Hub as a service connection in Azure DevOps)
+- task: Docker@2
+  inputs:
+    command: 'login'
+    containerRegistry: 'docker-hub-connection' # Replace with your service connection name
 
-  # Step 3: Build and push the Docker image using script
-  - script: |
-      docker build -t nexusameer/dev-search:$(Build.BuildId) .
-      docker push nexusameer/dev-search:$(Build.BuildId)
-    displayName: 'Build and Push Docker Image'
+# Step 3: Build the Docker image using the Dockerfile in your project
+- task: Docker@2
+  inputs:
+    command: 'build'
+    dockerfile: '**/Dockerfile'  # Ensure this path is correct for your Dockerfile
+    buildContext: $(Build.SourcesDirectory)  # Context should be the root of your repo
+    tags: 'nexusameer/dev-search:$(Build.BuildId)'  # Tag with a unique build ID
 
-  # Step 4: Run the container and deploy Django
-  - script: |
-      docker run --rm -v $(System.DefaultWorkingDirectory):/app -w /app -d -p 8000:8000 --name django-container nexusameer/dev-search:$(Build.BuildId)
-    displayName: 'Run Docker Container'
+# Step 4: Push the Docker image to Docker Hub
+- task: Docker@2
+  inputs:
+    command: 'push'
+    imageName: 'nexusameer/dev-search:$(Build.BuildId)'  # Push the newly built image
 
-  # Step 5: Install dependencies and run tests
-  - script: |
-      docker exec django-container python -m pip install --upgrade pip
-      docker exec django-container pip install -r requirements.txt
-    displayName: 'Install dependencies inside container'
+# Step 5: Pull the newly built Docker image
+- task: Docker@2
+  inputs:
+    command: 'pull'
+    imageName: 'nexusameer/dev-search:$(Build.BuildId)'  # Pull the image with the new tag
 
-  - script: |
-      docker exec django-container python manage.py migrate
-      docker exec django-container python manage.py collectstatic --noinput
-      docker exec django-container python manage.py test
-    displayName: 'Run migrations, collect static files, and run tests'
+# Step 6: Run the container with the new image and deploy Django
+- task: Docker@2
+  inputs:
+    command: 'run'
+    containerName: 'django-container'
+    imageName: 'nexusameer/dev-search:$(Build.BuildId)'  # Use the newly built image
+    options: '--rm -v $(System.DefaultWorkingDirectory):/app -w /app'
+    ports: '8000:8000'
+    detach: true  # Ensure the container runs in the background
 
-  # Step 6: Publish Test Results (if any)
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: '**/TEST-*.xml'
-      testRunTitle: 'Django Tests in Docker'
-    condition: succeededOrFailed()
+# Step 7: Install dependencies and run tests inside the container
+- script: |
+    docker exec django-container python -m pip install --upgrade pip
+    docker exec django-container pip install -r requirements.txt
+  displayName: 'Install prerequisites inside container'
+
+- script: |
+    docker exec django-container python manage.py migrate
+    docker exec django-container python manage.py collectstatic --noinput
+    docker exec django-container python manage.py test
+  displayName: 'Run migrations, collect static files, and run tests inside container'
+
+# Step 8: Publish Test Results (if any)
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: '**/TEST-*.xml'
+    testRunTitle: 'Django Tests in Docker'
+  condition: succeededOrFailed()
