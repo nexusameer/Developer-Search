@@ -1,67 +1,16 @@
 trigger:
-- main  # Trigger the pipeline when changes happen on the main branch
+- main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 variables:
-  system.debug: true  # Enable debug mode for detailed logs
+  System.Debug: true
 
 steps:
-# Step 1: Checkout code
-- task: Checkout@1
-  inputs:
-    clean: true
-  displayName: 'Checkout code'
-  continueOnError: false
-
-# Step 2: Login to Docker Hub
 - script: |
-    echo "Attempting Docker Hub login..."
-    docker login -u $(DOCKER_USERNAME) -p $(DOCKER_PASSWORD)
-  displayName: 'Login to Docker Hub'
-
-# Step 3: Build the Docker image using the Dockerfile
-- script: |
-    echo "Starting Docker build process..."
-    docker build -f Dockerfile -t nexusameer/dev-search:$(Build.BuildId) .
-  displayName: 'Build Docker Image'
-
-# Step 4: Push the Docker image to Docker Hub
-- script: |
-    echo "Pushing Docker image to Docker Hub..."
-    docker push nexusameer/dev-search:$(Build.BuildId)
-  displayName: 'Push Docker Image'
-
-# Step 5: Pull the Docker image
-- script: |
-    echo "Pulling the newly built Docker image..."
-    docker pull nexusameer/dev-search:$(Build.BuildId)
-  displayName: 'Pull Docker Image'
-
-# Step 6: Run the container and deploy Django
-- script: |
-    echo "Running Docker container..."
-    docker run --rm -v $(System.DefaultWorkingDirectory):/app -w /app -d -p 8000:8000 --name django-container nexusameer/dev-search:$(Build.BuildId)
-  displayName: 'Run Docker Container'
-
-# Step 7: Install dependencies and run tests
-- script: |
-    echo "Installing prerequisites inside container..."
-    docker exec django-container python -m pip install --upgrade pip
-    docker exec django-container pip install -r requirements.txt
-  displayName: 'Install prerequisites inside container'
-
-- script: |
-    echo "Running migrations and tests inside the container..."
-    docker exec django-container python manage.py migrate
-    docker exec django-container python manage.py collectstatic --noinput
-    docker exec django-container python manage.py test
-  displayName: 'Run migrations, collect static files, and run tests'
-
-# Step 8: Publish Test Results (if any)
-- task: PublishTestResults@2
-  inputs:
-    testResultsFiles: '**/TEST-*.xml'
-    testRunTitle: 'Django Tests in Docker'
-  condition: succeededOrFailed()
+    echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin
+  displayName: 'Docker Hub Login'
+  env:
+    DOCKER_USERNAME: 'nexusameer'  # Replace with your Docker Hub username
+    DOCKER_PASSWORD: 'abc123ameer'  # Replace with your Docker Hub password
