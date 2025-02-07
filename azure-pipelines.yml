@@ -15,8 +15,8 @@ steps:
       echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin
     displayName: 'Login to Docker Hub'
     env:
-      DOCKER_USERNAME: nexusameer
-      DOCKER_PASSWORD: abc123ameer
+      DOCKER_USERNAME: $(dockerUsername)
+      DOCKER_PASSWORD: $(dockerPassword)
 
   # Step 3: Build and push the Docker image using script
   - script: |
