@@ -14,21 +14,21 @@ steps:
   - task: Docker@2
     inputs:
       command: 'login'
-      containerRegistry: 'docker-hub-connection' # Replace with your Docker Hub service connection
+      containerRegistry: 'docker-hub-connection'
 
   # Step 3: Build the Docker image
-  - task: Docker@2
-    inputs:
-      command: 'build'
-      dockerfile: 'Dockerfile'  # Ensure this points to the correct Dockerfile path
-      buildContext: '$(Build.SourcesDirectory)'  # Use the source directory as the context
-      tags: 'nexusameer/dev-search:$(Build.BuildId)'
+  # - task: Docker@2
+  #   inputs:
+  #     command: 'build'
+  #     dockerfile: 'Dockerfile'  # Ensure this points to the correct Dockerfile path
+  #     buildContext: '$(Build.SourcesDirectory)'  # Use the source directory as the context
+  #     tags: 'nexusameer/dev-search:$(Build.BuildId)'
 
   # Step 4: Push the Docker image
-  - task: Docker@2
-    inputs:
-      command: 'push'
-      imageName: 'nexusameer/dev-search:$(Build.BuildId)'
+  # - task: Docker@2
+  #   inputs:
+  #     command: 'push'
+  #     imageName: 'nexusameer/dev-search:$(Build.BuildId)'
 
   # Step 5: Run the Docker container
   - task: Docker@2
