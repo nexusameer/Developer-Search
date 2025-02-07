@@ -1,5 +1,5 @@
 trigger:
-  - main  # Trigger the pipeline on changes to the main branch
+  - main
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -10,29 +10,24 @@ steps:
     inputs:
       clean: true
 
-  # Step 2: Login to Docker Hub
-  - task: Docker@2
-    inputs:
-      command: 'login'
-      containerRegistry: 'docker-hub-connection'  # Ensure this matches the name of your Docker Hub connection
+  # Step 2: Login to Docker Hub using script
+  - script: |
+      echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin
+    displayName: 'Login to Docker Hub'
+    env:
+      DOCKER_USERNAME: nexusameer
+      DOCKER_PASSWORD: abc123ameer
 
-  # Step 3: Build and push the Docker image
-  - task: Docker@2
-    inputs:
-      command: 'buildAndPush'  # Combine build and push into one task
-      dockerfile: '**/Dockerfile'  # Path to your Dockerfile
-      buildContext: $(Build.SourcesDirectory)  # Root of your repo
-      tags: 'nexusameer/dev-search:$(Build.BuildId)'  # Use build ID as the tag
+  # Step 3: Build and push the Docker image using script
+  - script: |
+      docker build -t nexusameer/dev-search:$(Build.BuildId) .
+      docker push nexusameer/dev-search:$(Build.BuildId)
+    displayName: 'Build and Push Docker Image'
 
   # Step 4: Run the container and deploy Django
-  - task: Docker@2
-    inputs:
-      command: 'run'
-      containerName: 'django-container'
-      imageName: 'nexusameer/dev-search:$(Build.BuildId)'  # Tag used in the build step
-      options: '--rm -v $(System.DefaultWorkingDirectory):/app -w /app'
-      ports: '8000:8000'
-      detach: true  # Ensure it runs in the background
+  - script: |
+      docker run --rm -v $(System.DefaultWorkingDirectory):/app -w /app -d -p 8000:8000 --name django-container nexusameer/dev-search:$(Build.BuildId)
+    displayName: 'Run Docker Container'
 
   # Step 5: Install dependencies and run tests
   - script: |
