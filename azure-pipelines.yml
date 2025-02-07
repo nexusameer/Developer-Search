@@ -1,16 +1,61 @@
 trigger:
-- main
+  - main
 
 pool:
-  vmImage: 'ubuntu-latest'
-
-variables:
-  System.Debug: true
+  vmImage: ubuntu-latest
 
 steps:
-- script: |
-    echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin
-  displayName: 'Docker Hub Login'
-  env:
-    DOCKER_USERNAME: 'nexusameer'  # Replace with your Docker Hub username
-    DOCKER_PASSWORD: 'abc123ameer'  # Replace with your Docker Hub password
+  # Step 1: Checkout code
+  - task: Checkout@1
+    inputs:
+      clean: true
+
+  # Step 2: Docker Hub Login using a pre-configured service connection
+  - task: Docker@2
+    inputs:
+      command: 'login'
+      containerRegistry: 'docker-hub-connection' # Replace with your Docker Hub service connection
+
+  # Step 3: Build the Docker image
+  - task: Docker@2
+    inputs:
+      command: 'build'
+      dockerfile: 'Dockerfile'  # Ensure this points to the correct Dockerfile path
+      buildContext: '$(Build.SourcesDirectory)'  # Use the source directory as the context
+      tags: 'nexusameer/dev-search:$(Build.BuildId)'
+
+  # Step 4: Push the Docker image
+  - task: Docker@2
+    inputs:
+      command: 'push'
+      imageName: 'nexusameer/dev-search:$(Build.BuildId)'
+
+  # Step 5: Run the Docker container
+  - task: Docker@2
+    inputs:
+      command: 'run'
+      containerName: 'django-container'
+      imageName: 'nexusameer/dev-search:$(Build.BuildId)'
+      ports: '8000:8000'
+      options: '--rm'
+      detach: true
+
+  # Step 6: Install prerequisites inside the container
+  - script: |
+      docker exec django-container python -m pip install --upgrade pip
+      docker exec django-container pip install -r requirements.txt
+    displayName: 'Install prerequisites inside container'
+
+  # Step 7: Migrations, Static Files, and Tests
+  - script: |
+      docker exec django-container python manage.py migrate
+      docker exec django-container python manage.py collectstatic --noinput
+      docker exec django-container python manage.py test
+    displayName: 'Run migrations, collect static files, and tests'
+
+  # Step 8: Publish Test Results
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFiles: '**/TEST-*.xml'
+      testRunTitle: 'Django Tests in Docker'
+    condition: succeededOrFailed()
