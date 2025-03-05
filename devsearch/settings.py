@@ -171,6 +171,15 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'nexusameer@gmail.com'
 EMAIL_HOST_PASSWORD = 'xsjyqezmqbeyddvu'
 
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": "dyeujvhhn",
+    "API_KEY": "881419276781671",
+    "API_SECRET": "X8us4wbU7nV2YOavehzL22ZEYvo",
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
