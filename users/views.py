@@ -7,8 +7,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q
 from .utils import *
-from django.db.models import Case, When, Value, IntegerField
-
 
 
 # Authentication
@@ -72,16 +70,8 @@ def registerUser(request):
 
 # Other Views
 def profiles(request):
-    # Get all profiles and annotate with is_admin field
-    profiles = Profile.objects.annotate(
-        is_admin=Case(
-            When(user__is_superuser=True, then=Value(1)),  # Admin users get value 1
-            default=Value(0),  # Regular users get value 0
-            output_field=IntegerField(),
-        )
-    ).order_by('-is_admin', 'name')  # Admins first, then sorted by name
-
-    context = {'profiles': profiles}
+    profiles, search_query = searchProfiles(request)
+    context = {'profiles': profiles, 'search_query': search_query}
     return render(request, 'users/profiles.html', context)
 
 
