@@ -28,3 +28,4 @@ secrets/
 .idea/
 *.iml
 
+.env
