@@ -24,6 +24,11 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.username
+    
+    @property
+    def is_admin(self):
+        """Returns 1 if the user is an admin, else 0 (for sorting purposes)."""
+        return 1 if self.user and self.user.is_superuser else 0
 
 
 class Skill(models.Model):
