@@ -191,9 +191,6 @@ STATICFILES_DIRS = [BASE_DIR / 'static']  # This is correct
 # Ensure only ONE STATIC_ROOT definition
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Use WhiteNoise for serving static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
 # Media settings
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
