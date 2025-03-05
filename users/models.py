@@ -30,7 +30,8 @@ class Profile(models.Model):
         """Returns 1 if the user is an admin, else 0 (for sorting purposes)."""
         return 1 if self.user and self.user.is_superuser else 0
 
-
+    class Meta:
+        ordering = ['id']
 class Skill(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=200, blank=True, null=True)
