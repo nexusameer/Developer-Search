@@ -4,6 +4,11 @@ FROM python:3.13-slim
 # Set the working directory inside the container
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy the current directory contents into the container at /app
 COPY . /app/
 
